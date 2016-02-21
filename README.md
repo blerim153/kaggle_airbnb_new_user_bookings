@@ -1,25 +1,29 @@
 		Airbnb New User Booking Competition (Kaggle)
 
 Competition:
-—————————————————————————————————
+-------------------------------
 https://www.kaggle.com/c/airbnb-recruiting-new-user-bookings
 
 
 Where to find the original data:
-—————————————————————————————————
+-------------------------------
 https://www.kaggle.com/c/airbnb-recruiting-new-user-bookings/data
 
 
-Prediction Logic:
-—————————————————————————————————
-An important characteristic of this competition is that there is
-a time cut-off between the training and testing dta. 
-
-This code uses 4 classifiers. The predictions are combined with simple voting. 
+Short description:
+-------------------------------
+An important characteristic of this competition is that there is a time cut-off
+between training and testing data -- training data end on 7/1/2014, and testing
+data start on that data. Moreover, the session informations are available only 
+for the data points after 2014. 
+This code used 4 classifiers: (1) XGB trained on all (training) data, (2)
+RandomForests trained on all data, (3) XGB classifier trained on recent 
+(aka fresh) data only, and  (4) RandomForests trained on all data only.
+The results from each clasifier formed the final prediction via weighted voting. 
 
 
 How to run the code:
-—————————————————————————————————
+-------------------------------
 (0) Make sure that the raw data from the Kaggle competition are in the
     same directory as the code.
 
@@ -43,6 +47,6 @@ How to run the code:
 
 
 Status:
-—————————————————————————————————
+-------------------------------
 Finished in the 60th position in the (private) leaderboard (out
 of 1463 participants).
