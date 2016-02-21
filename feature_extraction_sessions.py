@@ -4,29 +4,24 @@ Extracting freatures from the session data.
 The data set can be found here:
 www.kaggle.com/c/airbnb-recruiting-new-user-bookings/download/sessions.csv.zip
 '''
-import collections
 import numpy as np
 import pandas as pd
 import scipy.stats as stats
+from utilities import remove_rare_values_inplace
 
 
 # pylint: disable=fixme, no-member
 
 
-def remove_rare_values_inplace(df_frame, column_list, threshold):
-    """ Remove rare values to speed up computation.
+INDEX_COLUMN = 'user_id'
+SECS_ELAPSED_NUMERICAL = 'secs_elapsed'
+CATEGORICAL_FEATURES = ['action', 'action_type', 'action_detail', 'device_type']
+SESSSIONS_CSV_FILE = 'sessions.csv'
+OUTPUT_TO_CSV_FILE = 'session_features.csv'  # Results will be saved here.
 
-    Args:
-        df_frame -- A pandas data frame.
-        column_list -- A list of columns.
-        threshold -- The threshold, below which a value is removed.
-    """
-    insignificant_population = int(np.floor(threshold * len(df_frame)))
-    for cat in column_list:
-        freqs = collections.Counter(df_frame[cat])
-        other = [i for i in freqs if freqs[i] < insignificant_population]
-        for i in other:
-            df_frame[cat].replace(i, 'other', inplace=True)
+# A parameter to speed-up computation. Categorical values that appear
+# less than the threshold will be removed.
+VALUE_THRESHOLD = 0.005
 
 
 def extract_frequency_counts(pd_frame, column_list):
@@ -47,7 +42,7 @@ def extract_frequency_counts(pd_frame, column_list):
     df_extracted_sessions = []
     for col in column_list:
         for val in set(pd_frame[col]):
-            print 'Frequency counts for (column: %s == value:%s)' % (col, val)
+            print 'Extracting frequency counts for (%s == %s)' % (col, val)
             tmp_df = pd_frame.groupby(pd_frame.index).apply(
                 lambda group, x=col, y=val: np.sum(group[x] == y))
             tmp_df.name = '%s=%s' % (col, val)
@@ -92,21 +87,4 @@ def main():
 
 
 if __name__ == '__main__':
-    # Global variables:
-    #    INDEX_NAME -- The column that should be set as index.
-    #    CATEGORICAL_FEATURES -- The list of categorical features.
-    #    SECS_ELAPSED_NUMERICAL -- The name of the numerical column in the data.
-    #    VALUE_THRESHOLD -- A parameter to speed-up computation. Categorical
-    #        values that appear less than the threshold will be removed.
-    #    SESSSIONS_CSV_FILE -- The name of the file that contains the sessions.
-    #    OUTPUT_CSV_FILE -- Where to save the extracted features.
-
-    INDEX_COLUMN = 'user_id'
-    CATEGORICAL_FEATURES = ['action', 'action_type', 'action_detail',
-                            'device_type']
-    SECS_ELAPSED_NUMERICAL = 'secs_elapsed'
-    VALUE_THRESHOLD = 0.005
-    SESSSIONS_CSV_FILE = 'sessions.csv'
-    OUTPUT_TO_CSV_FILE = 'ssession_features.csv'
-
     main() # Run the main method.

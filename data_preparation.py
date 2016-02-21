@@ -10,8 +10,6 @@ from utilities import remove_rare_values_inplace
 # pylint: disable=fixme, no-member
 
 
-INDEX_COLUMN_BASIC = 'id'
-INDEX_COLUMN_SESSIONS = 'user_id'
 LABEL = 'country_destination'
 CATEGORICAL_FEATURES = ['affiliate_channel', 'affiliate_provider',
                         'first_affiliate_tracked', 'first_browser',
@@ -85,16 +83,18 @@ def apply_one_hot_encoding(pd_frame, column_list):
     return new_pd_frame
 
 
-def get_basic_pd_frame():
+def get_basic_train_test_data():
     """ Load the basic data in a pandas dataframe, and pre-process them. """
-    training = pd.read_csv(TRAIN_DATA_BASIC)
-    labels = training[[INDEX_COLUMN_BASIC, LABEL]].copy()
+    training = pd.read_csv(TRAIN_DATA_BASIC, index_col=0)
+    testing = pd.read_csv(TEST_DATA_BASIC, index_col=0)
+    labels = training[LABEL].copy()
     training.drop(LABEL, inplace=True, axis=1)
-    testing = pd.read_csv(TEST_DATA_BASIC)
     features = pd.concat((training, testing), axis=0)
-    features.set_index(INDEX_COLUMN_BASIC, inplace=True)
-    labels.set_index(INDEX_COLUMN_BASIC, inplace=True)
     features.fillna(-1, inplace=True)
+
+    # Process all features by removing rare values, appling one-hot-encoding to
+    # those that are categorical and extracting numericals from ACCOUNT_DATE.
+
     remove_rare_values_inplace(features, CATEGORICAL_FEATURES, VALUE_THRESHOLD)
     features = apply_one_hot_encoding(features, CATEGORICAL_FEATURES)
     extract_dates_inplace(features, ACCOUNT_DATE)
@@ -104,18 +104,23 @@ def get_basic_pd_frame():
 
 def main():
     """ Load basic data, add session data, and prepare them for predition. """
-    features, labels, training_ids, testing_ids = get_basic_pd_frame()
-    sessions = pd.read_csv(SESSION_DATA)
-    sessions.set_index(INDEX_COLUMN_SESSIONS, inplace=True)
+    features, labels, training_ids, testing_ids = get_basic_train_test_data()
+    sessions = pd.read_csv(SESSION_DATA, index_col=0)
     features = pd.concat((features, sessions), axis=1)
     features.fillna(-1, inplace=True)
-
     # Save data training and testing data.
     training = features.ix[training_ids]
     testing = features.ix[testing_ids]
-    training.to_csv(TRAINING_FINAL_CSV_FILE)
-    testing.to_csv(TESTING_FINAL_CSV_FILE)
-    labels.to_csv(LABELS_FINAL_CSV_FILE)
+
+    # Warning: When saving the data, it's important that the header is True,
+    # because labels is of type pandas.core.series.Series, while training is of
+    # type pandas.core.frame.DataFrame, and they have different default values
+    # for the header argument.
+
+    assert set(training.index) == set(labels.index)
+    training.to_csv(TRAINING_FINAL_CSV_FILE, header=True)
+    testing.to_csv(TESTING_FINAL_CSV_FILE, header=True)
+    labels.to_csv(LABELS_FINAL_CSV_FILE, header=True)
 
 
 if __name__ == '__main__':
